@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Chatbot - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 bg-blue-600 text-white">
+            <h1 class="text-xl font-semibold">Yedek Parça Asistanı</h1>
+            <p class="text-sm opacity-75">Size nasıl yardımcı olabilirim?</p>
+        </div>
+
+        <div id="chat-messages" class="h-[500px] overflow-y-auto p-4 space-y-4">
+            {% for message in messages %}
+                <div class="flex {% if message.is_user %}justify-end{% endif %}">
+                    <div class="max-w-[70%] rounded-lg p-3 {% if message.is_user %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ message.content }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="p-4 border-t">
+            <form method="post" class="flex space-x-4" id="chat-form">
+                {% csrf_token %}
+                <input type="text" 
+                       name="message" 
+                       id="message-input"
+                       class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Mesajınızı yazın..."
+                       required>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                    Gönder
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-4">Sık Sorulan Sorular</h2>
+        <div class="space-y-4">
+            <button class="w-full text-left p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 quick-question">
+                Hangi araçlar için yedek parça bulabilirim?
+            </button>
+            <button class="w-full text-left p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 quick-question">
+                Sipariş takibini nasıl yapabilirim?
+            </button>
+            <button class="w-full text-left p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 quick-question">
+                İade ve değişim politikanız nedir?
+            </button>
+            <button class="w-full text-left p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 quick-question">
+                Ödeme seçenekleri nelerdir?
+            </button>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const quickQuestions = document.querySelectorAll('.quick-question');
+
+        // Sohbet penceresini en alta kaydır
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Hızlı soru butonları
+        quickQuestions.forEach(button => {
+            button.addEventListener('click', function() {
+                messageInput.value = this.textContent.trim();
+                messageInput.focus();
+            });
+        });
+
+        // Form gönderimi
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Kullanıcı mesajını ekle
+            const userMessage = document.createElement('div');
+            userMessage.className = 'flex justify-end';
+            userMessage.innerHTML = `
+                <div class="max-w-[70%] rounded-lg p-3 bg-blue-600 text-white">
+                    ${message}
+                </div>
+            `;
+            chatMessages.appendChild(userMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Form verilerini gönder
+            fetch('{% url "chatbot" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Bot yanıtını ekle
+                const botMessage = document.createElement('div');
+                botMessage.className = 'flex';
+                botMessage.innerHTML = `
+                    <div class="max-w-[70%] rounded-lg p-3 bg-gray-100 text-gray-800">
+                        ${data.response}
+                    </div>
+                `;
+                chatMessages.appendChild(botMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            })
+            .catch(error => console.error('Error:', error));
+
+            // Input'u temizle
+            messageInput.value = '';
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

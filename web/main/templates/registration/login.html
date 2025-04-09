@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Giriş Yap - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-2xl font-bold mb-6 text-center">Giriş Yap</h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+            Giriş Yap
+        </button>
+    </form>
+    <div class="mt-4 text-center">
+        <p class="text-gray-600">Hesabınız yok mu? <a href="{% url 'register' %}" class="text-blue-600 hover:text-blue-800">Kayıt Olun</a></p>
+    </div>
+</div>
+{% endblock %} 

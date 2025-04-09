@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ part.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="md:flex">
+            <div class="md:w-1/2">
+                {% if part.image %}
+                    <img src="{{ part.image.url }}" alt="{{ part.name }}" class="w-full h-96 object-cover">
+                {% else %}
+                    <div class="w-full h-96 bg-gray-200 flex items-center justify-center">
+                        <span class="text-gray-400">Resim yok</span>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="md:w-1/2 p-8">
+                <h1 class="text-3xl font-bold mb-4">{{ part.name }}</h1>
+                <p class="text-gray-600 mb-6">{{ part.description }}</p>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600">Kategori:</span>
+                        <span class="font-semibold">{{ part.category.name }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-600">Stok Durumu:</span>
+                        <span class="font-semibold {% if part.stock > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if part.stock > 0 %}Stokta{% else %}Tükendi{% endif %}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Fiyat:</span>
+                        <span class="text-2xl font-bold text-blue-600">{{ part.price }} TL</span>
+                    </div>
+                </div>
+
+                {% if part.stock > 0 %}
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-200">
+                            Sipariş Ver
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="bg-red-100 text-red-700 p-4 rounded-lg">
+                        Bu ürün şu anda stokta bulunmamaktadır.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if related_parts %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold mb-6">Benzer Parçalar</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for related_part in related_parts %}
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        {% if related_part.image %}
+                            <img src="{{ related_part.image.url }}" alt="{{ related_part.name }}" class="w-full h-48 object-cover">
+                        {% else %}
+                            <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                                <span class="text-gray-400">Resim yok</span>
+                            </div>
+                        {% endif %}
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold mb-2">{{ related_part.name }}</h3>
+                            <p class="text-gray-600 mb-4">{{ related_part.description|truncatewords:10 }}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-blue-600">{{ related_part.price }} TL</span>
+                                <a href="{% url 'part_detail' related_part.id %}" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                                    Detaylar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
